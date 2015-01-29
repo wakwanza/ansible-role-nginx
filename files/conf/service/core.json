@@ -1,0 +1,6 @@
+{
+	"service": {
+	"name": "core",
+	"port":  8000
+	}
+}

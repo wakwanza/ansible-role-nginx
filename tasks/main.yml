@@ -1,0 +1,162 @@
+---
+# tasks file for ansible-role-nginx
+  - name: Update world
+    yum: name=* state=latest
+
+  - name: Install the EPEL repos
+    yum: pkg={{ repo.epel }}  state=installed
+
+  - name: Install the Common packages
+    yum: pkg={{ item }} state=installed
+    with_items:
+     - libselinux-python
+     - python-pip
+     - openssl
+     - python
+     - python-devel
+     - openssl-devel
+     - python-zope-interface
+     - sysstat
+     - nc
+     - git
+     - ruby
+     - libyaml
+     - perl-libwww-perl
+     - curl
+     - curl-devel
+     - monit 
+     - unzip
+     - libyaml
+     - fail2ban
+     - GeoIP
+     - geoip-geolite
+
+  - name: Install supervisord
+    pip: name=supervisor state=present
+
+  - name: Make the supervisor conf directory
+    file: dest=/etc/supervisor state=directory
+
+  - name: Disable SELINUX
+    selinux: state=disabled
+
+  - name: Create control group for consul
+    group: name=consul state=present
+
+  - name: Create user for consul
+    user: name=consul group=consul  
+
+  - name: Create client config directory
+    file: path=/etc/consul.d/client state=directory owner=consul group=users
+
+  - name: Add the var folder
+    file: path=/var/consul state=directory owner=consul group=consul mode=755
+
+  - name: Install the consul binary
+    unarchive: copy=no src={{ consul.binary }} dest=/usr/local/bin/ creates=/usr/local/bin/consul
+
+  - name: Ensure dnsmasq exists
+    yum: pkg=dnsmasq state=installed
+
+  - name: Modify the dnsmasq fragment
+    lineinfile: > 
+    dest=/etc/dnsmasq.conf line='strict-order\nserver=/consul/127.0.0.1\#8600' state=present
+
+  - name: Modify the resolv.conf
+    lineinfile: dest=/etc/resolv.conf regexp="^search " insertafter="^search " line='nameserver 127.0.0.1' state=present
+
+  - name: Load the supervisor consul fragment
+    copy: src=conf/consul.ini dest=/etc/supervisor/consul.ini
+
+  - name: Setup the supervisord file
+    copy: src=conf/supervisor.j2  dest=/etc/supervisord.conf
+
+  - name: Set the init script for supervisor
+    copy: src=conf/supervisord.init dest=/etc/init.d/supervisord mode=0755 
+
+  - name: Start at boot supervisor
+    service: name=supervisord state=started enabled=yes
+
+  - name: Create the custom ssl dir
+    file: path=/etc/ssl/certs/custom state=directory  owner=root
+
+  - name: Install the nginx custom binary
+    yum: name={{ nginx.custom }} state=installed
+
+  - name: Copy the ssl certs into the custom directory
+    copy: src={{ item }} dest=/etc/ssl/certs/custom owner=root group=users mode=644
+    with_fileglob:
+    - certs/*
+
+  - name: erase the old config files
+    file: path=/etc/nginx/conf.d/{{ items }} state=absent
+    with_items:
+    - default.conf
+    - example-ssl.conf
+
+  - name: Create the template dirs
+    file: path=/etc/consul.d/templates state=directory owner=consul group=users
+
+  - name: Copy the proxy config template file
+    copy: src=conf/{{ items }} dest=/etc/consul.d/templates owner=consul group=users
+    with_items:
+    - *.ctmpl
+
+  - name: Put the consul-template into bin dir
+    unarchive: copy=no src=/tmp/{{ consul.template }} dest=/usr/local/bin/ creates=/usr/local/bin/consul-template mode=0775 group=consul
+
+  - name: Load the consul_t config file
+    copy: src=conf/consult.conf dest=/etc/consul_t.conf owner=consul group=root
+
+  - name: Load the consul_t supervisor fragment
+    copy: src=conf/consul_template.ini dest=/etc/supervisor/consul_template.ini 
+
+  - name: Copy the client config file for service
+    copy: src=conf/service/ngnx.json dest=/etc/consul.d/client owner=consul 
+
+  - name: Copy the fail2ban local jail
+    copy: src=conf/fail2banlocaljail.conf dest=/etc/fail2ban/jail.local owner=root
+
+  - name: Copy the ban filters over
+    copy: src={{ item }} dest=/etc/fail2ban/filter.d/  owner=nginx group=users
+    with_fileglob:
+    - conf/fail2ban/*.*
+
+  - name: Copy the http server config fragment and default
+    copy: src=conf/server/{{ item }} dest=/etc/nginx/conf.d/ owner=nginx group=users mode=644
+    with_items:
+    - ssl.conf
+    - default.conf
+
+  - name: make the tcp proxy and extra http conf folder
+    file: path=/opt/nginx/{{ item }} state=directory owner=nginx group=nginx
+    with_items:
+    - http
+
+  - name: Copy the drop and naxsi rules into the config
+    template: src=conf/{{ item }} dest=/etc/nginx/ owner=nginx group=users
+    with_items:
+    - nginx.conf
+    - naxsi.rules
+    - naxsi_core.rules
+
+  - name: load up on artillery
+    git: repo=https://github.com/trustedsec/artillery.git dest=/tmp/arty
+
+  - name: install artillery
+    command: /tmp/arty/setup.py yes
+
+  - name: setup my custom artillery config
+    template: src=config/artillery/config dest=/var/artillery/config owner=root group=users 
+
+  - name: Setup the monit daemon
+    copy: src=conf/nginx.monit dest=/etc/monit.d/nginx owner=root 
+
+  - name: Start at boot dnsmasq
+    service: name=dnsmasq state=started enabled=yes
+
+  - name: Start at boot nginx
+    service: name=nginx state=started enabled=yes
+
+  - name: Start at boot monit
+    service: name=monit state=started enabled=yes

@@ -1,0 +1,4 @@
+upstream appserv { {{ range service "core"}}
+	server {{.Address}}:{{.Port}};{{end}}
+	}
+

@@ -1,0 +1,26 @@
+[unix_http_server]
+file=/var/tmp/supervisor.sock   ; (the path to the socket file)
+
+[supervisord]
+minfds = 1024
+minprocs = 200
+loglevel = info
+logfile = /var/log/supervisord.log
+logfile_maxbytes = 50MB
+nodaemon = false
+pidfile = /etc/supervisor/supervisord.pid
+logfile_backups = 10
+
+[supervisorctl]
+serverurl = unix:///var/tmp/supervisor.sock
+
+[rpcinterface:supervisor]
+supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+
+;[inet_http_server]
+;username = guest
+;password = mypassword
+;port = 127.0.0.1:9001
+
+[include]
+files = /etc/supervisor/*

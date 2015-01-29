@@ -1,0 +1,15 @@
+---
+# vars file for ansible-role-nginx
+repo:
+  epel: http://mirror.sfo12.us.leaseweb.net/epel/6/i386/epel-release-6-8.noarch.rpm
+nginx:
+  custom: https://bintray.com/artifact/download/wakwanza/rpm/nginx-1.6.2-1.el6.ngxmsec.x86_64.rpm
+  internal_range: 172.20.0.0/16
+artillery:
+  homebase: 127.0.0.1
+  alert_email: info@myemail.com
+  custom_ports: 53
+consul:
+  binary: https://dl.bintray.com/mitchellh/consul/0.4.1_linux_amd64.zip
+  template: https://github.com/hashicorp/consul-template/releases/download/v0.6.0/consul-template_0.6.0_linux_amd64.tar.gz
+  binary: consul-template_0.6.0_linux_amd64.tar.gz

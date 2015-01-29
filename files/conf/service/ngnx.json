@@ -1,0 +1,6 @@
+{
+	"service": {
+	"name": "ngnx",
+	"port":  443
+	}
+}
