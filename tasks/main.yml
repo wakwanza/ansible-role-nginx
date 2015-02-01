@@ -103,7 +103,7 @@
     - *.ctmpl
 
   - name: Put the consul-template into bin dir
-    unarchive: copy=no src=/tmp/{{ consul.template }} dest=/usr/local/bin/ creates=/usr/local/bin/consul-template mode=0775 group=consul
+    unarchive: copy=no src={{ consul.template }} dest=/usr/local/bin/ creates=/usr/local/bin/consul-template mode=0775 group=consul
 
   - name: Load the consul_t config file
     copy: src=conf/consult.conf dest=/etc/consul_t.conf owner=consul group=root

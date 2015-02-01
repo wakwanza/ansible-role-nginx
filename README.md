@@ -1,31 +1,59 @@
-Role Name
+nginx
 =========
 
-A brief description of the role goes here.
+nginx role to provide a secure ssl connection with backend health checks provided by consul.io .Extra security features baked into the default nginx binary include naxsi and more featured headers module for obfuscation and hashing of links.Extra artillery idp/ids installed.
+Fail2ban with nginx-local jails.Custom ssl configuration for A-Grade at Qualys ssl-check.Monit daemon for keep alive of the nginx process and autoreload in cse of errors.
 
 Requirements
 ------------
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+Environment must be using consul for service discovery, both for the current nginx node and the backends to be balanced.SSL certificates in certs directory , private and public fragments , with the public fragment chained with its intermediate certs.
+
 
 Role Variables
 --------------
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+<table>
+    <tr>
+        <td>{{ repo.epel }} </td> <td>EPEL repo url default (leaseweb mirror)</td>
+    </tr>
+        <tr>
+        <td>{{ nginx.custom }} </td> <td> rpm location for custom nginx build</td>
+    </tr>
+    <tr>
+        <td>{{ nginx.internal_range }} </td> <td> Internal subnet range  for backend services</td>
+    </tr>
+    </tr>
+    <tr>
+        <td>{{ consul.binary }} </td> <td> Consul binary zip for x86_64</td>
+    </tr>
+    <tr>
+        <td>{{ consul.template }} </td> <td> Consul-template binary zip for x86_64</td>
+    </tr>
+     <tr>
+        <td>{{ artillery.homebase }} </td> <td> Ranges of ips to whitelist</td>
+    </tr>
+    <tr>
+        <td>{{ artillery.alert_email }} </td> <td> Email address for alerts to be sent to</td>
+    </tr>
+    <tr>
+        <td>{{ artillery.custom_ports }} </td> <td> Custom ports to monitor with artillery</td>
+    </tr>
+</table>
+
 
 Dependencies
 ------------
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+.
+
 
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
-    - hosts: servers
+    - hosts: webservers
       roles:
-         - { role: username.rolename, x: 42 }
+         - { role: wakwanza.ansible-role-nginx }
 
 License
 -------
@@ -35,4 +63,4 @@ BSD
 Author Information
 ------------------
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+wakwanza.
